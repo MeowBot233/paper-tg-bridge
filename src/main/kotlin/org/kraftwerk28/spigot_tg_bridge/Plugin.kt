@@ -14,6 +14,7 @@ class Plugin : AsyncJavaPlugin() {
 
     override suspend fun onEnableAsync() {
         try {
+            setupChat()
             launch {
                 config = Configuration(this).also {
                     initializeWithConfig(it)
@@ -103,7 +104,7 @@ class Plugin : AsyncJavaPlugin() {
     }
 
     private fun setupChat(): Boolean {
-        var rsp = server.servicesManager.getRegistration(ch::class.java)
+        val rsp = server.servicesManager.getRegistration(ch::class.java)
         rsp?.let { chat = it.provider }
         return chat != null
     }

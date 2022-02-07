@@ -1,7 +1,9 @@
 name: SpigotTGBridge
 version: "0.19"
-api-version: "1.15"
+api-version: "1.18"
 main: org.kraftwerk28.spigot_tg_bridge.Plugin
+softdepend:
+  - Vault
 description: Telegram <-> Minecraft communication plugin for Spigot.
 commands:
   tgbridge_reload:
