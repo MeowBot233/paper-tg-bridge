@@ -15,8 +15,11 @@ class Configuration(plugin: Plugin) {
     val leaveString: String
     val logDeath: Boolean
     val logPlayerAsleep: Boolean
+    val logPlayerAdvancement: Boolean
+    val advancementString: String
     val onlineString: String
     val nobodyOnlineString: String
+    val asleepString: String
     val enableIgnAuth: Boolean
 
     // Telegram bot stuff
@@ -26,6 +29,8 @@ class Configuration(plugin: Plugin) {
     val allowWebhook: Boolean
     val webhookConfig: Map<String, Any>?
     val pollTimeout: Int
+
+    val telegramAPI: String
 
     var commands: BotCommands
 
@@ -92,15 +97,32 @@ class Configuration(plugin: Plugin) {
             onlineString = getString("strings.online", "Online")!!
             nobodyOnlineString = getString(
                 "strings.nobodyOnline",
-                "Nobody online",
+                "Nobody online"
+            )!!
+            asleepString = getString(
+                "strings.asleep",
+                "<b>%username%</b> 睡觉了"
             )!!
             joinString = getString(
                 "strings.joined",
-                "<i>%username%</i> joined.",
+                "<b>%username%</b> 进入服务器"
             )!!
-            leaveString = getString("strings.left", "<i>%username%</i> left.")!!
+            leaveString = getString(
+                "strings.left",
+                "<b>%username%</b> 退出服务器"
+            )!!
+            logPlayerAdvancement = getBoolean("logPlayerAdvancement", false)
+            advancementString = getString(
+                "strings.advancement",
+                "<b>%username%<b> 取得了进度 <b>%advancement%<b>"
+            )!!
             logDeath = getBoolean("logPlayerDeath", false)
             logPlayerAsleep = getBoolean("logPlayerAsleep", false)
+            telegramAPI = getString(
+                "telegramAPI",
+                "api.telegram.org"
+            )!!
+
             commands = BotCommands(this)
         }
     }

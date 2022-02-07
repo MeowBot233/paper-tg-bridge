@@ -3,10 +3,7 @@ package org.kraftwerk28.spigot_tg_bridge
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
-import org.bukkit.event.player.AsyncPlayerChatEvent
-import org.bukkit.event.player.PlayerBedEnterEvent
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.player.*
 
 class EventHandler(
     private val plugin: Plugin,
@@ -18,23 +15,36 @@ class EventHandler(
     fun onPlayerChat(event: AsyncPlayerChatEvent) {
         if (!config.logFromMCtoTG) return
         event.run {
-            sendMessage(message, player.displayName)
+            var name = ""
+            plugin.chat?.let {
+                name += it.getPlayerPrefix(player) + " "
+            }
+            name += player.displayName
+            sendMessage(message, name)
         }
     }
 
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         if (!config.logJoinLeave) return
-        val username = event.player.displayName.fullEscape()
-        val text = config.joinString.replace("%username%", username)
+        var name = ""
+        plugin.chat?.let {
+            name += it.getPlayerPrefix(event.player) + " "
+        }
+        name += event.player.displayName
+        val text = config.joinString.replace("%username%", name)
         sendMessage(text)
     }
 
     @EventHandler
     fun onPlayerLeave(event: PlayerQuitEvent) {
         if (!config.logJoinLeave) return
-        val username = event.player.displayName.fullEscape()
-        val text = config.leaveString.replace("%username%", username)
+        var name = ""
+        plugin.chat?.let {
+            name += it.getPlayerPrefix(event.player) + " "
+        }
+        name += event.player.displayName
+        val text = config.leaveString.replace("%username%", name)
         sendMessage(text)
     }
 
@@ -43,7 +53,12 @@ class EventHandler(
         if (!config.logDeath) return
         event.deathMessage?.let {
             val username = event.entity.displayName.fullEscape()
-            val text = it.replace(username, "<i>$username</i>")
+            var name = ""
+            plugin.chat?.let {
+                name += it.getPlayerPrefix(event.entity) + " "
+            }
+            name += event.entity.displayName
+            val text = it.replace(username, "<b>$name</b>")
             sendMessage(text)
         }
     }
@@ -53,7 +68,25 @@ class EventHandler(
         if (!config.logPlayerAsleep) return
         if (event.bedEnterResult != PlayerBedEnterEvent.BedEnterResult.OK)
             return
-        val text = "<i>${event.player.displayName}</i> fell asleep."
+        var name = ""
+        plugin.chat?.let {
+            name += it.getPlayerPrefix(event.player) + " "
+        }
+        name += event.player.displayName
+        val text = config.asleepString.replace("%username%", name)
+        sendMessage(text)
+    }
+
+    @EventHandler
+    fun onPlayerAdvancementDoneEvent(event: PlayerAdvancementDoneEvent) {
+        var name = ""
+        plugin.chat?.let {
+            name += it.getPlayerPrefix(event.player) + " "
+        }
+        name += event.player.displayName
+        val text = config.advancementString
+            .replace("%username%", name)
+            .replace("%advancement%", event.advancement.toString())
         sendMessage(text)
     }
 

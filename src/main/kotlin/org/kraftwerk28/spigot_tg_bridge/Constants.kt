@@ -12,10 +12,10 @@ object Constants {
         const val reloadComplete = "Reload completed."
     }
     object TIMES_OF_DAY {
-        const val day = "\uD83C\uDFDE Day"
-        const val sunset = "\uD83C\uDF06 Sunset"
-        const val night = "\uD83C\uDF03 Night"
-        const val sunrise = "\uD83C\uDF05 Sunrise"
+        const val day = "\uD83C\uDFDE 白天"
+        const val sunset = "\uD83C\uDF06 日落"
+        const val night = "\uD83C\uDF03 夜晚"
+        const val sunrise = "\uD83C\uDF05 日出"
     }
     const val USERNAME_PLACEHOLDER = "%username%"
     const val MESSAGE_TEXT_PLACEHOLDER = "%message%"
@@ -24,8 +24,8 @@ object Constants {
         const val PLUGIN_RELOAD = "tgbridge_reload"
     }
     object COMMAND_DESC {
-        const val timeDesc = "Get time on server"
-        const val onlineDesc = "Get players online"
-        const val chatIDDesc = "Get current chat id"
+        const val timeDesc = "获取服务器时间"
+        const val onlineDesc = "获取在线玩家"
+        const val chatIDDesc = "获取chat id"
     }
 }

@@ -1,22 +1,26 @@
 enable: true
-botToken: abcdef123456789
+botToken: token
 chats:
-  - -1234567890123
-serverStartMessage: "Server started."
-serverStopMessage: "Server stopped."
+  - -number
+serverStartMessage: "服务器启动了！"
+serverStopMessage: "服务器关闭了！"
 logJoinLeave: true
 logFromMCtoTG: true
 logFromTGtoMC: true
 logPlayerDeath: true
 logPlayerAsleep: false
-minecraftFormat: "§6§l%username%§r (from §o%chat%§r): §b%message%§r"
-telegramFormat: "<i>%username%</i>: %message%"
+logPlayerAdvancement: true
+minecraftFormat: "§9[TG转发] §r§3%username% §4§l> §r%message%"
+telegramFormat: "<b>%username%</b>:\n%message%"
 strings:
-  online: "<b>Online</b>"
-  nobodyOnline: "<b>Nobody online...</b>"
-  joined: "<i>%username%</i> joined."
-  left: "<i>%username%</i> left."
+  online: "<b>在线</b>"
+  nobodyOnline: "<b>没人在线</b>"
+  joined: "<b>%username%</b> 进入服务器"
+  left: "<b>%username%</b> 退出服务器"
+  asleep: "<b>%username%</b> 睡觉了"
+  advancement: "<b>%username%<b> 取得了进度 <b>%advancement%<b>"
 commands:
   time: "time"
   online: "online"
   chat_id: "chat_id"
+telegramAPI: "api.telegram.org"

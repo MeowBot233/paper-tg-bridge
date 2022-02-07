@@ -1,9 +1,8 @@
 package org.kraftwerk28.spigot_tg_bridge
 
-import kotlinx.coroutines.delay
 import org.bukkit.event.HandlerList
 import java.lang.Exception
-import kotlin.system.measureTimeMillis
+import net.milkbowl.vault.chat.Chat as ch
 import org.kraftwerk28.spigot_tg_bridge.Constants as C
 
 class Plugin : AsyncJavaPlugin() {
@@ -11,6 +10,7 @@ class Plugin : AsyncJavaPlugin() {
     private var eventHandler: EventHandler? = null
     private var config: Configuration? = null
     var ignAuth: IgnAuth? = null
+    var chat: ch? = null
 
     override suspend fun onEnableAsync() {
         try {
@@ -100,5 +100,11 @@ class Plugin : AsyncJavaPlugin() {
             }
             logger.info(C.INFO.reloadComplete)
         }
+    }
+
+    private fun setupChat(): Boolean {
+        var rsp = server.servicesManager.getRegistration(ch::class.java)
+        rsp?.let { chat = it.provider }
+        return chat != null
     }
 }

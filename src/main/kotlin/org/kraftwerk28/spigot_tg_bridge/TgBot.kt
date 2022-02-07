@@ -29,7 +29,7 @@ class TgBot(
         .readTimeout(Duration.ZERO)
         .build()
     private val api = Retrofit.Builder()
-        .baseUrl("https://api.telegram.org/bot${config.botToken}/")
+        .baseUrl("https://${config.telegramAPI}/bot${config.botToken}/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
@@ -183,7 +183,7 @@ class TgBot(
         val chatId = msg.chat.id
         val text = """
         |Chat ID: <code>$chatId</code>.
-        |Copy this id to <code>chats</code> section in your <b>config.yml</b> file so it will look like this:
+        |复制到配置文件中的 <code>chats</code> 部分:
         |
         |<pre>chats:
         |  # other ids...

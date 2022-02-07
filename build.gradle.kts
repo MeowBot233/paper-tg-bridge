@@ -48,6 +48,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.2.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
     implementation("com.vdurmont:emoji-java:5.1.1")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
 }
 
 defaultTasks("shadowJar")
@@ -61,7 +62,7 @@ tasks {
     register<Copy>("copyArtifacts") {
         val dest = File(
             System.getProperty("user.home"),
-            "MinecraftServers/spigot_1.17/plugins/",
+            "MinecraftServers/spigot_1.18/plugins/",
         )
         from(shadowJar)
         into(dest)
