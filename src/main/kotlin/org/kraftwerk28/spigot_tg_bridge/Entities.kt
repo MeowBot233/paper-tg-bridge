@@ -23,7 +23,7 @@ data class User(
 data class Chat(
     val id: Long,
     val type: String,
-    val title: String? = null,
+    val title: String = "",
     val username: String? = null,
     @Name("first_name") val firstName: String? = null,
     @Name("last_name") val lastName: String? = null,
@@ -33,10 +33,40 @@ data class Message(
     @Name("message_id") val messageId: Long,
     val from: User? = null,
     @Name("sender_chat") val senderChat: Chat? = null,
+    @Name("forward_from") val forwardFrom: User? = null,
+    @Name("forward_from_chat") val forwardFromChat: Chat? = null,
     val date: Long,
     val chat: Chat,
     @Name("reply_to_message") val replyToMessage: Message? = null,
     val text: String? = null,
+    val photo:Array<PhotoSize> = emptyArray(),
+    val sticker: Sticker? = null,
+    val video: Any? = null,
+    val voice: Any? = null,
+    val audio: Audio? = null,
+    val document: Document? = null,
+    val poll: Poll? = null
+)
+
+data class PhotoSize(
+    @Name("file_id") val fileId: String
+)
+
+data class Sticker(
+    val emoji: String? = null,
+    @Name("set_name") val setName: String? = null
+)
+
+data class Poll(
+    val question: String
+)
+
+data class Document(
+    @Name("file_name") val fileName: String
+)
+
+data class Audio(
+    val duration: Int
 )
 
 data class Update(

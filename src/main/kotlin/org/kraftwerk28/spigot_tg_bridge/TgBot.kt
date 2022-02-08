@@ -5,6 +5,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.HoverEvent
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -170,7 +174,7 @@ class TgBot(
         val playerList = plugin.server.onlinePlayers
         val playerStr = plugin.server
             .onlinePlayers
-            .mapIndexed { i, s -> "${i + 1}. ${s.displayName.fullEscape()}" }
+            .mapIndexed { i, s -> "${i + 1}. ${PlainTextComponentSerializer.plainText().serialize(s.displayName()).fullEscape()}" }
             .joinToString("\n")
         val text =
             if (playerList.isNotEmpty()) "${config.onlineString}:\n$playerStr"
@@ -231,10 +235,37 @@ class TgBot(
         @Suppress("unused_parameter") ctx: HandlerContext
     ) {
         val msg = ctx.message!!
+        plugin.server.logger.info(msg.toString())
         if (!config.logFromTGtoMC || msg.from == null)
             return
+        val text = Component.empty()
+        msg.replyToMessage?.let {
+            text.append(Component.text("[回复给 ${it.from?.rawUserMention()}]").color(NamedTextColor.GOLD))
+        }
+        if(msg.photo.isNotEmpty()){
+            text.append(Component.text("[${msg.photo.size}张图片]").color(NamedTextColor.BLUE))
+        }
+        msg.sticker?.let {
+            text.append(Component.text("[贴纸]").color(NamedTextColor.BLUE))
+                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("来自贴纸包 ${it.setName}")) )
+        }
+        msg.document?.let {
+            text.append(Component.text("[文件] ${it.fileName}").color(NamedTextColor.BLUE))
+        }
+        msg.video?.let {
+            text.append(Component.text("[视频]").color(NamedTextColor.BLUE))
+        }
+        msg.poll?.let {
+            text.append(Component.text("[投票] ${it.question}").color(NamedTextColor.BLUE))
+        }
+
+        msg.text?.let {
+            text.append(Component.text(it))
+        }
+
+        if(text == Component.empty()) text.content("[消息]").color(NamedTextColor.DARK_GREEN)
         plugin.sendMessageToMinecraft(
-            text = msg.text!!,
+            text = text,
             username = msg.from.rawUserMention(),
             chatTitle = msg.chat.title,
         )

@@ -1,5 +1,7 @@
 package org.kraftwerk28.spigot_tg_bridge
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextReplacementConfig
 import org.bukkit.event.HandlerList
 import java.lang.Exception
 import net.milkbowl.vault.chat.Chat as ch
@@ -40,7 +42,7 @@ class Plugin : AsyncJavaPlugin() {
         tgBot?.run { stop() }
         tgBot = TgBot(this, config).also { bot ->
             bot.startPolling()
-            eventHandler = EventHandler(this, config, bot).also {
+            EventHandler(this, config, bot).also {
                 server.pluginManager.registerEvents(it, this)
             }
         }
@@ -68,23 +70,23 @@ class Plugin : AsyncJavaPlugin() {
     }
 
     fun sendMessageToMinecraft(
-        text: String,
-        username: String? = null,
-        chatTitle: String? = null,
+        text: Component,
+        username: String,
+        chatTitle: String,
     ) = config?.run {
-        minecraftFormat
-            .replace(C.MESSAGE_TEXT_PLACEHOLDER, text.escapeEmoji())
-            .run {
-                username?.let {
-                    replace(C.USERNAME_PLACEHOLDER, it.escapeEmoji())
-                } ?: this
-            }
-            .run {
-                chatTitle?.let {
-                    replace(C.CHAT_TITLE_PLACEHOLDER, it)
-                } ?: this
-            }
-            .also { server.broadcastMessage(it) }
+        val format = Component.text(
+            minecraftFormat
+            .replace(C.USERNAME_PLACEHOLDER,username)
+            .replace(C.CHAT_TITLE_PLACEHOLDER, chatTitle)
+        ).replaceText(
+            TextReplacementConfig.builder()
+                .match(C.MESSAGE_TEXT_PLACEHOLDER)
+                .replacement(text)
+                .once()
+                .build()
+            )
+        server.broadcast(format)
+
     }
 
     suspend fun reload() {
