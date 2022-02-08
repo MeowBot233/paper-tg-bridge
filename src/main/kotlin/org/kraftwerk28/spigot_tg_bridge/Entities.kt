@@ -39,7 +39,7 @@ data class Message(
     val chat: Chat,
     @Name("reply_to_message") val replyToMessage: Message? = null,
     val text: String? = null,
-    val photo:Array<PhotoSize> = emptyArray(),
+    val photo:Array<PhotoSize>? = emptyArray(),
     val sticker: Sticker? = null,
     val video: Any? = null,
     val voice: Any? = null,

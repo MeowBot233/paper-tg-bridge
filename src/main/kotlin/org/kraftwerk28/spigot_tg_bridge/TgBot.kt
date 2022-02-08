@@ -127,14 +127,16 @@ class TgBot(
             update.message,
             update.message?.chat,
         )
-        update.message?.text?.let {
-            commandRegex?.matchEntire(it)?.groupValues?.let { matchList ->
-                commandMap[matchList[1]]?.run {
-                    val args = matchList[2].split("\\s+".toRegex())
-                    this(ctx.copy(commandArgs = args))
+        update.message?.let {
+            it.text?.let { it1 ->
+                commandRegex?.matchEntire(it1)?.groupValues?.let { matchList ->
+                    commandMap[matchList[1]]?.run {
+                        val args = matchList[2].split("\\s+".toRegex())
+                        this(ctx.copy(commandArgs = args))
+                    }
                 }
             } ?: run {
-                onTextHandler(ctx)
+                onMessageHandler(ctx)
             }
         }
     }
@@ -231,23 +233,33 @@ class TgBot(
         }
     }
 
-    private fun onTextHandler(
+    private fun onMessageHandler(
         @Suppress("unused_parameter") ctx: HandlerContext
     ) {
         val msg = ctx.message!!
         plugin.server.logger.info(msg.toString())
         if (!config.logFromTGtoMC || msg.from == null)
             return
-        val text = Component.empty()
+
+        plugin.sendMessageToMinecraft(
+            text = processMessage(msg),
+            username = msg.from.rawUserMention(),
+            chatTitle = msg.chat.title,
+        )
+    }
+
+    private fun processMessage(msg:Message): Component {
+        val text = Component.text()
         msg.replyToMessage?.let {
             text.append(Component.text("[回复给 ${it.from?.rawUserMention()}]").color(NamedTextColor.GOLD))
+                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, processMessage(it)))
         }
-        if(msg.photo.isNotEmpty()){
-            text.append(Component.text("[${msg.photo.size}张图片]").color(NamedTextColor.BLUE))
+        if(!msg.photo.isNullOrEmpty()){
+            text.append(Component.text("[图片]").color(NamedTextColor.BLUE))
         }
         msg.sticker?.let {
             text.append(Component.text("[贴纸]").color(NamedTextColor.BLUE))
-                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("来自贴纸包 ${it.setName}")) )
+                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("${it.emoji} 来自贴纸包 ${it.setName}")) )
         }
         msg.document?.let {
             text.append(Component.text("[文件] ${it.fileName}").color(NamedTextColor.BLUE))
@@ -263,12 +275,8 @@ class TgBot(
             text.append(Component.text(it))
         }
 
-        if(text == Component.empty()) text.content("[消息]").color(NamedTextColor.DARK_GREEN)
-        plugin.sendMessageToMinecraft(
-            text = text,
-            username = msg.from.rawUserMention(),
-            chatTitle = msg.chat.title,
-        )
+        if(text.children().isEmpty()) text.content("[消息]").color(NamedTextColor.DARK_GREEN)
+        return text.build()
     }
 
     suspend fun sendMessageToTelegram(text: String, username: String? = null) {
