@@ -1,5 +1,7 @@
 package org.kraftwerk28.spigot_tg_bridge
 
+import okio.ByteString.Companion.readByteString
+import org.yaml.snakeyaml.Yaml
 import java.io.File
 import org.kraftwerk28.spigot_tg_bridge.Constants as C
 
@@ -22,6 +24,8 @@ class Configuration(plugin: Plugin) {
     val asleepString: String
     val enableIgnAuth: Boolean
 
+    val death: Map<String, String>
+
     // Telegram bot stuff
     val botToken: String
     val allowedChats: List<Long>
@@ -34,6 +38,8 @@ class Configuration(plugin: Plugin) {
 
     var commands: BotCommands
 
+    val debug: Boolean
+
     init {
         val cfgFile = File(plugin.dataFolder, C.configFilename)
         if (!cfgFile.exists()) {
@@ -42,6 +48,7 @@ class Configuration(plugin: Plugin) {
             // plugin.saveResource(C.configFilename, false);
             throw Exception(C.WARN.noConfigWarning)
         }
+        death = Yaml().load(this::class.java.getResourceAsStream("/death.yml"))
         val pluginConfig = plugin.config
         pluginConfig.load(cfgFile)
 
@@ -56,6 +63,7 @@ class Configuration(plugin: Plugin) {
             pluginConfig.set("minecraftMessageFormat", null)
             plugin.saveConfig()
         }
+
 
         pluginConfig.getString("telegramMessageFormat")?.let {
             plugin.logger.warning(
@@ -124,6 +132,8 @@ class Configuration(plugin: Plugin) {
             )!!
 
             commands = BotCommands(this)
+
+            debug = getBoolean("debug", false)
         }
     }
 

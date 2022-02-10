@@ -24,3 +24,4 @@ commands:
   online: "online"
   chat_id: "chat_id"
 telegramAPI: "api.telegram.org"
+debug: true

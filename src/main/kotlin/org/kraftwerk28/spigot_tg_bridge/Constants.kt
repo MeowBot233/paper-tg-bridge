@@ -3,13 +3,12 @@ package org.kraftwerk28.spigot_tg_bridge
 object Constants {
     const val configFilename = "config.yml"
     object WARN {
-        const val noConfigWarning = "No config file found! Writing default config to config.yml."
-        const val noToken = "Bot token must be defined."
-        const val noUsername = "Bot username must be defined."
+        const val noConfigWarning = "没有找到配置文件！默认配置文件将写入到 config.yml."
+        const val noToken = "Bot token 必填！"
     }
     object INFO {
-        const val reloading = "Reloading..."
-        const val reloadComplete = "Reload completed."
+        const val reloading = "重新加载..."
+        const val reloadComplete = "完成"
     }
     object TIMES_OF_DAY {
         const val day = "\uD83C\uDFDE 白天"

@@ -119,15 +119,16 @@ class TgBot(
     }
 
     private suspend fun handleUpdate(update: Update) {
+        if(config.debug) plugin.server.logger.info(update.toString())
         // Ignore private message or channel post
-        if (listOf("private", "channel").contains(update.message?.chat?.type))
+        if (update.message?.chat?.type != "group" && update.message?.chat?.type != "supergroup")
             return
         val ctx = HandlerContext(
             update,
             update.message,
-            update.message?.chat,
+            update.message.chat,
         )
-        update.message?.let {
+        update.message.let {
             it.text?.let { it1 ->
                 commandRegex?.matchEntire(it1)?.groupValues?.let { matchList ->
                     commandMap[matchList[1]]?.run {
@@ -237,7 +238,9 @@ class TgBot(
         @Suppress("unused_parameter") ctx: HandlerContext
     ) {
         val msg = ctx.message!!
-        plugin.server.logger.info(msg.toString())
+        if (!config.allowedChats.contains(msg.chat.id)) {
+            return
+        }
         if (!config.logFromTGtoMC || msg.from == null)
             return
 
@@ -254,15 +257,43 @@ class TgBot(
             text.append(Component.text("[回复给 ${it.from?.rawUserMention()}]").color(NamedTextColor.GOLD))
                 .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, processMessage(it)))
         }
+        msg.forwardFrom?.let {
+            val info = Component.text("转发自用户 ${it.rawUserMention()}")
+            it.username?.let{ username -> info.append(Component.text("\n@$username"))}
+            text.append(Component
+                .text("[转发消息]")
+                .color(NamedTextColor.GOLD)
+                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT,info)))
+        }
+        msg.forwardFromChat?.let {
+            val info = Component.text()
+            when(it.type) {
+                "channel" -> info.append(Component.text("转发自频道 ${it.title}"))
+                "group" -> info.append(Component.text("转发自群组 ${it.title} 的管理员"))
+            }
+            text.append(Component
+                .text("[转发消息]")
+                .color(NamedTextColor.GOLD)
+                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT,info.build()))
+            )
+        }
         if(!msg.photo.isNullOrEmpty()){
-            text.append(Component.text("[图片]").color(NamedTextColor.BLUE))
+            text.append(Component
+                .text("[图片]")
+                .color(NamedTextColor.BLUE)
+            )
         }
         msg.sticker?.let {
-            text.append(Component.text("[贴纸]").color(NamedTextColor.BLUE))
-                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("${it.emoji} 来自贴纸包 ${it.setName}")) )
+            text.append(Component.text("[贴纸 ${it.emoji}]")
+                .color(NamedTextColor.BLUE)
+                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("来自贴纸包 ${it.setName}")))
+            )
         }
         msg.document?.let {
             text.append(Component.text("[文件] ${it.fileName}").color(NamedTextColor.BLUE))
+        }
+        msg.voice?.let {
+            text.append(Component.text("[语音]").color(NamedTextColor.BLUE))
         }
         msg.video?.let {
             text.append(Component.text("[视频]").color(NamedTextColor.BLUE))

@@ -1,6 +1,8 @@
 package org.kraftwerk28.spigot_tg_bridge
 
 import io.papermc.paper.event.player.AsyncChatEvent
+import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.advancement.Advancement
 import org.bukkit.event.EventHandler
@@ -10,7 +12,6 @@ import org.bukkit.event.player.PlayerAdvancementDoneEvent
 import org.bukkit.event.player.PlayerBedEnterEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import java.awt.TextComponent
 
 class EventHandler(
     private val plugin: Plugin,
@@ -58,15 +59,33 @@ class EventHandler(
     @EventHandler
     fun onPlayerDied(event: PlayerDeathEvent) {
         if (!config.logDeath) return
+        if(config.debug) plugin.server.logger.info(event.deathMessage().toString())
+
         event.deathMessage()?.let { it ->
+            val comp = it as TranslatableComponent
             val username = PlainTextComponentSerializer.plainText().serialize(event.player.displayName())
             var name = ""
             plugin.chat?.let {
                 name += it.getPlayerPrefix(event.player) + " "
             }
             name += username
-            val text = PlainTextComponentSerializer.plainText().serialize(it).replace(username, "<b>$name</b>")
-            sendMessage(text)
+
+            var text = config.death[comp.key()]
+            if(text.isNullOrEmpty())
+                sendMessage(comp.key())
+            else {
+                for(i in 1 .. comp.args().size) {
+                    var arg = comp.args()[i-1]
+                    if(arg is TranslatableComponent) {
+                        text = text!!.replace("%$i", "<b>${(arg.args()[0].children()[0] as TextComponent).content()}</b>")
+                    }else {
+                        text = text!!.replace("%$i", "<b>${(arg as TextComponent).content()}</b>")
+                    }
+                }
+                text!!.replace(username, name)
+                sendMessage(text)
+            }
+
         }
     }
 
@@ -87,21 +106,21 @@ class EventHandler(
     @EventHandler
     fun onPlayerAdvancementDone(event: PlayerAdvancementDoneEvent) {
         if(!config.logPlayerAdvancement) return
-        plugin.server.logger.info("PlayerAdvancementDoneEvent")
-        var name = ""
-        plugin.chat?.let {
-            name += it.getPlayerPrefix(event.player) + " "
-        }
-        name += PlainTextComponentSerializer.plainText().serialize(event.player.displayName())
-        val text = config.advancementString
-            .replace("%username%", name)
-            .replace("%advancement%", PlainTextComponentSerializer.plainText().serialize(event.advancement.display!!.title()))
-        sendMessage(text)
+        if(config.debug) plugin.server.logger.info(event.toString())
+//        var name = ""
+//        plugin.chat?.let {
+//            name += it.getPlayerPrefix(event.player) + " "
+//        }
+//        name += PlainTextComponentSerializer.plainText().serialize(event.player.displayName())
+//        val text = config.advancementString
+//            .replace("%username%", name)
+//            .replace("%advancement%", PlainTextComponentSerializer.plainText().serialize(event.advancement.display!!.title()))
+//        sendMessage(text)
     }
 
     private fun sendMessage(text: String, username: String? = null) {
         plugin.launch {
-            tgBot.sendMessageToTelegram(text, username)
+            tgBot.sendMessageToTelegram(text.escapeColorCodes(), username)
         }
     }
 }
