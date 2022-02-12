@@ -1,11 +1,11 @@
-name: SpigotTGBridge
-version: "0.19"
+name: PaperTGBridge
+version: "1.0"
 api-version: "1.18"
-main: org.kraftwerk28.spigot_tg_bridge.Plugin
+main: nya.yukisawa.paper_tg_bridge.Plugin
 softdepend:
   - Vault
-description: Telegram <-> Minecraft communication plugin for Spigot.
+description: Telegram <-> Minecraft 消息互通的 Paper 插件。
 commands:
   tgbridge_reload:
-    description: "Reload Spigot TG bridge plugin"
+    description: "重新加载设置"
     usage: /<command>

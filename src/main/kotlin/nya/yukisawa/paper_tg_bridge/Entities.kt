@@ -1,6 +1,5 @@
-package org.kraftwerk28.spigot_tg_bridge
+package nya.yukisawa.paper_tg_bridge
 
-import java.sql.Date
 import com.google.gson.annotations.SerializedName as Name
 
 data class TgResponse<T>(
@@ -9,7 +8,6 @@ data class TgResponse<T>(
     val description: String?,
 )
 
-data class WebhookOptions(val drop_pending_updates: Boolean)
 
 data class User(
     @Name("id") val id: Long,
@@ -78,12 +76,3 @@ data class BotCommand(val command: String, val description: String)
 
 data class SetMyCommands(val commands: List<BotCommand>)
 
-data class DbLinkedUser(
-    val tgId: Long,
-    val tgFirstName: String,
-    val tgLastName: String?,
-    val tgUsername: String?,
-    val minecraftUuid: String,
-    val minecraftUsername: String,
-    val createdTimestamp: Date,
-)

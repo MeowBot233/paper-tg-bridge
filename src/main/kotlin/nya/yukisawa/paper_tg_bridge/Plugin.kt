@@ -1,27 +1,25 @@
-package org.kraftwerk28.spigot_tg_bridge
+package nya.yukisawa.paper_tg_bridge
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextReplacementConfig
 import org.bukkit.event.HandlerList
-import java.lang.Exception
 import net.milkbowl.vault.chat.Chat as ch
-import org.kraftwerk28.spigot_tg_bridge.Constants as C
+import nya.yukisawa.paper_tg_bridge.Constants as C
 
 class Plugin : AsyncJavaPlugin() {
     private var tgBot: TgBot? = null
     private var eventHandler: EventHandler? = null
     private var config: Configuration? = null
-    var ignAuth: IgnAuth? = null
     var chat: ch? = null
 
     override suspend fun onEnableAsync() {
         try {
-            setupChat()
             launch {
                 config = Configuration(this).also {
                     initializeWithConfig(it)
                 }
             }
+            setupChat()
         } catch (e: Exception) {
             // Configuration file is missing or incomplete
             logger.warning(e.message)
@@ -31,13 +29,6 @@ class Plugin : AsyncJavaPlugin() {
     private suspend fun initializeWithConfig(config: Configuration) {
         if (!config.isEnabled) return
 
-        if (config.enableIgnAuth) {
-            val dbFilePath = dataFolder.resolve("spigot-tg-bridge.sqlite")
-            ignAuth = IgnAuth(
-                fileName = dbFilePath.absolutePath,
-                plugin = this,
-            )
-        }
 
         tgBot?.run { stop() }
         tgBot = TgBot(this, config).also { bot ->
@@ -65,7 +56,6 @@ class Plugin : AsyncJavaPlugin() {
             eventHandler?.let { HandlerList.unregisterAll(it) }
             tgBot?.run { stop() }
             tgBot = null
-            ignAuth?.close()
         }
     }
 

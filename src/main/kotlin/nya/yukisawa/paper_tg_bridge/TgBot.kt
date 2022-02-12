@@ -1,4 +1,4 @@
-package org.kraftwerk28.spigot_tg_bridge
+package nya.yukisawa.paper_tg_bridge
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -13,7 +13,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.Duration
-import org.kraftwerk28.spigot_tg_bridge.Constants as C
+import nya.yukisawa.paper_tg_bridge.Constants as C
 
 typealias CmdHandler = suspend (HandlerContext) -> Unit
 
@@ -199,41 +199,6 @@ class TgBot(
         api.sendMessage(chatId, text, replyToMessageId = msg.messageId)
     }
 
-    private suspend fun linkIgnHandler(ctx: HandlerContext) {
-        val tgUser = ctx.message!!.from!!
-        val mcUuid = getMinecraftUuidByUsername(ctx.message.text!!)
-        if (mcUuid == null || ctx.commandArgs.isEmpty()) {
-            // Respond...
-            return
-        }
-        val (minecraftIgn) = ctx.commandArgs
-        val linked = plugin.ignAuth?.linkUser(
-            tgId = tgUser.id,
-            tgFirstName = tgUser.firstName,
-            tgLastName = tgUser.lastName,
-            minecraftUsername = minecraftIgn,
-            minecraftUuid = mcUuid,
-        ) ?: false
-        if (linked) {
-            // TODO
-        }
-    }
-
-    private suspend fun getLinkedUsersHandler(ctx: HandlerContext) {
-        val linkedUsers = plugin.ignAuth?.run {
-            getAllLinkedUsers()
-        } ?: listOf()
-        if (linkedUsers.isEmpty()) {
-            api.sendMessage(ctx.message!!.chat.id, "No linked users.")
-        } else {
-            val text = "<b>Linked users:</b>\n" +
-                linkedUsers.mapIndexed { i, dbUser ->
-                    "${i + 1}. ${dbUser.fullName()}"
-                }.joinToString("\n")
-            api.sendMessage(ctx.message!!.chat.id, text)
-        }
-    }
-
     private fun onMessageHandler(
         @Suppress("unused_parameter") ctx: HandlerContext
     ) {
@@ -251,7 +216,7 @@ class TgBot(
         )
     }
 
-    private fun processMessage(msg:Message): Component {
+    private fun processMessage(msg: Message): Component {
         val text = Component.text()
         msg.replyToMessage?.let {
             text.append(Component.text("[回复给 ${it.from?.rawUserMention()}]").color(NamedTextColor.GOLD))
@@ -259,11 +224,13 @@ class TgBot(
         }
         msg.forwardFrom?.let {
             val info = Component.text("转发自用户 ${it.rawUserMention()}")
-            it.username?.let{ username -> info.append(Component.text("\n@$username"))}
-            text.append(Component
-                .text("[转发消息]")
-                .color(NamedTextColor.GOLD)
-                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT,info)))
+            it.username?.let { username -> info.append(Component.text("\n@$username")) }
+            text.append(
+                Component
+                    .text("[转发消息]")
+                    .color(NamedTextColor.GOLD)
+                    .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, info))
+            )
         }
         msg.forwardFromChat?.let {
             val info = Component.text()

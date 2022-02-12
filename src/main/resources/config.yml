@@ -10,7 +10,7 @@ logFromTGtoMC: true
 logPlayerDeath: true
 logPlayerAsleep: false
 logPlayerAdvancement: true
-minecraftFormat: "§9[TG转发] §r§3%username% §4§l> §r%message%"
+minecraftFormat: "[%username%] §r%message%"
 telegramFormat: "<b>%username%</b>:\n%message%"
 strings:
   online: "<b>在线</b>"
@@ -18,7 +18,7 @@ strings:
   joined: "<b>%username%</b> 进入服务器"
   left: "<b>%username%</b> 退出服务器"
   asleep: "<b>%username%</b> 睡觉了"
-  advancement: "<b>%username%<b> 取得了进度 <b>%advancement%<b>"
+  advancement: "<b>%username%</b> %type% <b>[%advancement%]</b>\n%description%"
 commands:
   time: "time"
   online: "online"

@@ -1,9 +1,8 @@
-package org.kraftwerk28.spigot_tg_bridge
+package nya.yukisawa.paper_tg_bridge
 
-import okio.ByteString.Companion.readByteString
 import org.yaml.snakeyaml.Yaml
 import java.io.File
-import org.kraftwerk28.spigot_tg_bridge.Constants as C
+import nya.yukisawa.paper_tg_bridge.Constants as C
 
 class Configuration(plugin: Plugin) {
     val isEnabled: Boolean
@@ -22,9 +21,9 @@ class Configuration(plugin: Plugin) {
     val onlineString: String
     val nobodyOnlineString: String
     val asleepString: String
-    val enableIgnAuth: Boolean
 
     val death: Map<String, String>
+    val advancements: Map<String, String>
 
     // Telegram bot stuff
     val botToken: String
@@ -48,34 +47,11 @@ class Configuration(plugin: Plugin) {
             // plugin.saveResource(C.configFilename, false);
             throw Exception(C.WARN.noConfigWarning)
         }
-        death = Yaml().load(this::class.java.getResourceAsStream("/death.yml"))
+        val yaml = Yaml()
+        death = yaml.load(this::class.java.getResourceAsStream("/death.yml"))
+        advancements = yaml.load(this::class.java.getResourceAsStream("/advancements.yml"))
         val pluginConfig = plugin.config
         pluginConfig.load(cfgFile)
-
-        pluginConfig.getString("minecraftMessageFormat")?.let {
-            plugin.logger.warning(
-                """
-                Config option "minecraftMessageFormat" is deprecated.
-                Moved it to new key "telegramFormat"
-                """.trimIndent().replace('\n', ' ')
-            )
-            pluginConfig.set("telegramFormat", it)
-            pluginConfig.set("minecraftMessageFormat", null)
-            plugin.saveConfig()
-        }
-
-
-        pluginConfig.getString("telegramMessageFormat")?.let {
-            plugin.logger.warning(
-                """
-                Config option "telegramMessageFormat" is deprecated.
-                Moved it to new key "minecraftFormat"
-                """.trimIndent().replace('\n', ' ')
-            )
-            pluginConfig.set("minecraftFormat", it)
-            pluginConfig.set("telegramMessageFormat", null)
-            plugin.saveConfig()
-        }
 
         pluginConfig.run {
             isEnabled = getBoolean("enable", true)
@@ -83,17 +59,9 @@ class Configuration(plugin: Plugin) {
             serverStopMessage = getString("serverStopMessage")
             logFromTGtoMC = getBoolean("logFromTGtoMC", true)
             logFromMCtoTG = getBoolean("logFromMCtoTG", true)
-            telegramFormat = getString(
-                "telegramFormat",
-                "<i>%username%</i>: %message%",
-            )!!
-            minecraftFormat = getString(
-                "minecraftFormat",
-                "<%username%>: %message%",
-            )!!
-            // isEnabled = getBoolean("enable", true)
+            telegramFormat = getString("telegramFormat")!!
+            minecraftFormat = getString("minecraftFormat")!!
             allowedChats = getLongList("chats")
-            enableIgnAuth = getBoolean("enableIgnAuth", false)
 
             botToken = getString("botToken") ?: throw Exception(C.WARN.noToken)
             allowWebhook = getBoolean("useWebhook", false)
@@ -102,28 +70,13 @@ class Configuration(plugin: Plugin) {
             pollTimeout = getInt("pollTimeout", 30)
 
             logJoinLeave = getBoolean("logJoinLeave", false)
-            onlineString = getString("strings.online", "Online")!!
-            nobodyOnlineString = getString(
-                "strings.nobodyOnline",
-                "Nobody online"
-            )!!
-            asleepString = getString(
-                "strings.asleep",
-                "<b>%username%</b> 睡觉了"
-            )!!
-            joinString = getString(
-                "strings.joined",
-                "<b>%username%</b> 进入服务器"
-            )!!
-            leaveString = getString(
-                "strings.left",
-                "<b>%username%</b> 退出服务器"
-            )!!
+            onlineString = getString("strings.online")!!
+            nobodyOnlineString = getString("strings.nobodyOnline")!!
+            asleepString = getString("strings.asleep")!!
+            joinString = getString("strings.joined")!!
+            leaveString = getString("strings.left")!!
             logPlayerAdvancement = getBoolean("logPlayerAdvancement", false)
-            advancementString = getString(
-                "strings.advancement",
-                "<b>%username%<b> 取得了进度 <b>%advancement%<b>"
-            )!!
+            advancementString = getString("strings.advancement")!!
             logDeath = getBoolean("logPlayerDeath", false)
             logPlayerAsleep = getBoolean("logPlayerAsleep", false)
             telegramAPI = getString(

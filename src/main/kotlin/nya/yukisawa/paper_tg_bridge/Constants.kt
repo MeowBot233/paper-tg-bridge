@@ -1,4 +1,4 @@
-package org.kraftwerk28.spigot_tg_bridge
+package nya.yukisawa.paper_tg_bridge
 
 object Constants {
     const val configFilename = "config.yml"
