@@ -1,8 +1,10 @@
 package nya.yukisawa.paper_tg_bridge
 
 import io.papermc.paper.event.player.AsyncChatEvent
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.TranslatableComponent
+import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -11,6 +13,7 @@ import org.bukkit.event.player.PlayerAdvancementDoneEvent
 import org.bukkit.event.player.PlayerBedEnterEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.w3c.dom.Text
 
 class EventHandler(
     private val plugin: Plugin,
@@ -36,9 +39,10 @@ class EventHandler(
         if (!config.logJoinLeave) return
         var name = ""
         plugin.chat?.let {
-            name += it.getPlayerPrefix(event.player) + " "
+            val prefix = it.getPlayerPrefix(event.player)
+            name += prefix + " "
         }
-        name += PlainTextComponentSerializer.plainText().serialize(event.player.displayName())
+        name += (event.player.displayName() as TextComponent).content()
         val text = config.joinString.replace("%username%", name)
         sendMessage(text)
     }
@@ -58,33 +62,28 @@ class EventHandler(
     @EventHandler
     fun onPlayerDied(event: PlayerDeathEvent) {
         if (!config.logDeath) return
-        if(config.debug) plugin.server.logger.info(event.deathMessage().toString())
+        if (config.debug) plugin.server.logger.info(event.deathMessage().toString())
 
         event.deathMessage()?.let { it ->
             val comp = it as TranslatableComponent
-            val username = PlainTextComponentSerializer.plainText().serialize(event.player.displayName())
-            var name = ""
-            plugin.chat?.let {
-                name += it.getPlayerPrefix(event.player) + " "
-            }
-            name += username
+            var text = processComponent(comp)
+            sendMessage(text.replace("\$s", ""))
 
-            var text = config.death[comp.key()]
-            if(text.isNullOrEmpty())
-                sendMessage(comp.key())
-            else {
-                for(i in 1 .. comp.args().size) {
-                    var arg = comp.args()[i-1]
-                    if(arg is TranslatableComponent) {
-                        text = text!!.replace("%$i", "<b>${(arg.args()[0].children()[0] as TextComponent).content()}</b>")
-                    }else {
-                        text = text!!.replace("%$i", "<b>${(arg as TextComponent).content()}</b>")
-                    }
-                }
-                text!!.replace(username, name)
-                sendMessage(text)
-            }
+        }
+    }
 
+    fun processComponent(comp: Component): String {
+        if (comp is TextComponent) return comp.content()
+        else {
+            val tc = comp as TranslatableComponent
+            var str = config.lang[tc.key()]!!
+            for (child in tc.children())
+                str = str.replaceFirst("%s", processComponent(child))
+            for (i in 1..tc.args().size)
+                str = str.replace("%$i", processComponent(tc.args()[i - 1]))
+            if (tc.key() == "chat.square_brackets")
+                str = str.replace("%s", (tc.args()[0].children()[0] as TextComponent).content())
+            return str
         }
     }
 
@@ -117,12 +116,12 @@ class EventHandler(
             val titleKey = advancement.key()
             val descriptionKey = titleKey.replace("title", "description")
             if (config.debug) plugin.server.logger.info("title: $titleKey \ndescription: $descriptionKey")
-            if (config.advancements.containsKey(titleKey)) {
+            if (config.lang.containsKey(titleKey)) {
                 val text = config.advancementString
-                    .replace("%type%", config.advancements[it.key()]!!)
+                    .replace("%type%", config.lang[it.key()]!!.replace("%s", ""))
                     .replace("%username%", name)
-                    .replace("%advancement%", config.advancements[titleKey]!!)
-                    .replace("%description%", config.advancements[descriptionKey]!!)
+                    .replace("%advancement%", config.lang[titleKey]!!)
+                    .replace("%description%", config.lang[descriptionKey]!!)
                 sendMessage(text)
             } else sendMessage(titleKey)
         }

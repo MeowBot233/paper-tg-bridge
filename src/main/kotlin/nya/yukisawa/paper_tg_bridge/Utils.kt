@@ -11,7 +11,7 @@ fun String.escapeHTML() = this
     .replace(">", "&gt;")
     .replace("<", "&lt;")
 
-fun String.escapeColorCodes() = replace("\u00A7.".toRegex(), "")
+fun String.escapeColorCodes() = replace("\u00A7.".toRegex(), "").replace("\u0024.".toRegex(), "")
 
 fun String.fullEscape() = escapeHTML().escapeColorCodes()
 

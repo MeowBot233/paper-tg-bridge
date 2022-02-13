@@ -22,8 +22,7 @@ class Configuration(plugin: Plugin) {
     val nobodyOnlineString: String
     val asleepString: String
 
-    val death: Map<String, String>
-    val advancements: Map<String, String>
+    val lang: Map<String, String>
 
     // Telegram bot stuff
     val botToken: String
@@ -48,8 +47,7 @@ class Configuration(plugin: Plugin) {
             throw Exception(C.WARN.noConfigWarning)
         }
         val yaml = Yaml()
-        death = yaml.load(this::class.java.getResourceAsStream("/death.yml"))
-        advancements = yaml.load(this::class.java.getResourceAsStream("/advancements.yml"))
+        lang = yaml.load(this::class.java.getResourceAsStream("/lang.yml"))
         val pluginConfig = plugin.config
         pluginConfig.load(cfgFile)
 
