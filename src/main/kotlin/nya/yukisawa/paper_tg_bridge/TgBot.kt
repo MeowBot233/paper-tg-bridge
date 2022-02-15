@@ -219,8 +219,10 @@ class TgBot(
     private fun processMessage(msg: Message): Component {
         val text = Component.text()
         msg.replyToMessage?.let {
-            text.append(Component.text("[回复给 ${it.from?.rawUserMention()}]").color(NamedTextColor.GOLD))
-                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, processMessage(it)))
+            text.append(
+                Component.text("[回复给 ${it.from?.rawUserMention()}]").color(NamedTextColor.GOLD)
+                    .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, processMessage(it)))
+            )
         }
         msg.forwardFrom?.let {
             val info = Component.text("转发自用户 ${it.rawUserMention()}")
