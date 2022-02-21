@@ -2,6 +2,7 @@ package nya.yukisawa.paper_tg_bridge
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextReplacementConfig
+import org.bukkit.command.CommandSender
 import org.bukkit.event.HandlerList
 import net.milkbowl.vault.chat.Chat as ch
 import nya.yukisawa.paper_tg_bridge.Constants as C
@@ -79,10 +80,10 @@ class Plugin : AsyncJavaPlugin() {
 
     }
 
-    suspend fun reload() {
+    suspend fun reload(sender: CommandSender) {
         config = Configuration(this).also { config ->
             if (!config.isEnabled) return
-            logger.info(C.INFO.reloading)
+            sender.sendMessage(C.INFO.reloading)
             eventHandler?.let { HandlerList.unregisterAll(it) }
             tgBot?.run { stop() }
             tgBot = TgBot(this, config).also { bot ->
@@ -91,12 +92,13 @@ class Plugin : AsyncJavaPlugin() {
                     server.pluginManager.registerEvents(it, this)
                 }
             }
-            logger.info(C.INFO.reloadComplete)
+            sender.sendMessage(C.INFO.reloadComplete)
         }
     }
 
     private fun setupChat(): Boolean {
-        val rsp = server.servicesManager.getRegistration(ch::class.java)
+        if (!server.pluginManager.isPluginEnabled("Vault")) return false
+        val rsp = server.servicesManager.getRegistration(ch::class.javaObjectType)
         rsp?.let { chat = it.provider }
         return chat != null
     }

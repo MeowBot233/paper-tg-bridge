@@ -13,10 +13,10 @@ class CommandHandler(private val plugin: Plugin) : CommandExecutor {
         label: String,
         args: Array<out String>
     ): Boolean {
-        if (sender !is ConsoleCommandSender) return false
+        if (sender !is ConsoleCommandSender && !sender.isOp) return false
         return when (label) {
             C.COMMANDS.PLUGIN_RELOAD -> {
-                plugin.launch { plugin.reload() }
+                plugin.launch { plugin.reload(sender) }
                 true
             }
             else -> false

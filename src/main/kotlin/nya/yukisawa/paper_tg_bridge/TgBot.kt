@@ -60,6 +60,8 @@ class TgBot(
         )
     }
 
+    private val meow = listOf("喵喵喵~", "喵呜！", "Nya~", "喵", "Meow~", "喵喵？", "捕捉小猫咪！")
+
     private suspend fun initialize() {
         me = api.getMe().result!!
         val commands = config.commands.run { listOf(time, online, chatID, whitelist, meow) }
@@ -138,6 +140,7 @@ class TgBot(
                     if (cmds[1] != me!!.username) return
                     cmds[0].substring(1)
                 } else args[0].substring(1)
+
                 commandMap[cmd]?.run {
                     this(ctx.copy(commandArgs = args))
                     return
@@ -212,24 +215,38 @@ class TgBot(
             return
         }
         if (ctx.commandArgs.count() != 2 && ctx.commandArgs.count() != 3) {
+            if (config.debug) plugin.server.logger.info("Wrong usage of /whitelist!")
             api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
             return
         }
         when (ctx.commandArgs[1]) {
             "add" -> {
                 if (ctx.commandArgs.count() != 3) {
+                    if (config.debug) plugin.server.logger.info("Wrong usage of /whitelist!")
                     api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
                     return
                 }
                 val name = ctx.commandArgs[2]
                 val result = uuidHelper.getUUID(name)
                 if (result.code != "player.found") {
-                    api.sendMessage(chatId, config.whitelistFailedString.replace("%username%", name), msg.messageId)
+                    if (config.debug) plugin.server.logger.info("Player <b>$name</b> is not found!")
+                    api.sendMessage(
+                        chatId,
+                        config.whitelistFailedString.replace("%username%", "<b>$name</b>"),
+                        msg.messageId
+                    )
                     return
                 }
-                val uuid = result.data!!.player.id
-                plugin.server.getOfflinePlayer(UUID.fromString(uuid)).isWhitelisted = true
-                api.sendMessage(chatId, config.whitelistAddSucceedString.replace("%username%", name), msg.messageId)
+                val uuid = UUID.fromString(result.data!!.player.id)
+                val player = plugin.server.getOfflinePlayer(uuid)
+                player.isWhitelisted = true
+                plugin.server.whitelistedPlayers.add(player)
+                plugin.server.reloadWhitelist()
+                api.sendMessage(
+                    chatId,
+                    config.whitelistAddSucceedString.replace("%username%", "<b>${player.name}</b>"),
+                    msg.messageId
+                )
             }
             "remove" -> {
                 if (ctx.commandArgs.count() != 3) {
@@ -242,10 +259,14 @@ class TgBot(
                     it.isWhitelisted = false
                     api.sendMessage(
                         chatId,
-                        config.whitelistRemoveSucceedString.replace("%username%", name),
+                        config.whitelistRemoveSucceedString.replace("%username%", "<b>$name</b>"),
                         msg.messageId
                     )
-                } ?: api.sendMessage(chatId, config.whitelistFailedString.replace("%username%", name), msg.messageId)
+                } ?: api.sendMessage(
+                    chatId,
+                    config.whitelistFailedString.replace("%username%", "<b>$name</b>"),
+                    msg.messageId
+                )
             }
             "list" -> {
                 if (ctx.commandArgs.count() != 2) {
@@ -260,13 +281,25 @@ class TgBot(
                 text += players.count()
                 api.sendMessage(chatId, text, msg.messageId)
             }
+            "reload" -> {
+                plugin.server.reloadWhitelist()
+                api.sendMessage(chatId, "✔️", msg.messageId)
+            }
             "on" -> {
-                plugin.server.setWhitelist(true)
+                plugin.server.scheduler.runTask(plugin, Runnable {
+                    plugin.server.setWhitelist(true)
+                })
                 api.sendMessage(chatId, "✔️", msg.messageId)
             }
             "off" -> {
-                plugin.server.setWhitelist(false)
-                api.sendMessage(chatId, "❌", msg.messageId)
+                plugin.server.scheduler.runTask(plugin, Runnable {
+                    plugin.server.setWhitelist(false)
+                })
+                api.sendMessage(chatId, "✖️", msg.messageId)
+            }
+            else -> {
+                if (config.debug) plugin.server.logger.info("Wrong usage of /whitelist!")
+                api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
             }
         }
 
@@ -277,7 +310,7 @@ class TgBot(
     ) {
         val msg = ctx.message!!
         val chatId = msg.chat.id
-        api.sendMessage(chatId, "喵喵喵~", msg.messageId)
+        api.sendMessage(chatId, meow.shuffled().take(1)[0], msg.messageId)
     }
 
     private fun onMessageHandler(
