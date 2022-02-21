@@ -17,4 +17,3 @@ fun String.fullEscape() = escapeHTML().escapeColorCodes()
 
 fun User.rawUserMention(): String = firstName + (lastName?.let { " $it" } ?: "")
 
-

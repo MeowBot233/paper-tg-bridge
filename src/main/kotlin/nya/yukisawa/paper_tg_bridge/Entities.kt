@@ -9,6 +9,11 @@ data class TgResponse<T>(
 )
 
 
+data class Update(
+    @Name("update_id") val updateId: Long,
+    val message: Message? = null,
+)
+
 data class User(
     @Name("id") val id: Long,
     @Name("is_bot") val isBot: Boolean,
@@ -67,10 +72,6 @@ data class Audio(
     val duration: Int
 )
 
-data class Update(
-    @Name("update_id") val updateId: Long,
-    val message: Message? = null,
-)
 
 data class BotCommand(val command: String, val description: String)
 

@@ -26,5 +26,7 @@ object Constants {
         const val timeDesc = "获取服务器时间"
         const val onlineDesc = "获取在线玩家"
         const val chatIDDesc = "获取chat id"
+        const val whitelistDesc = "管理白名单"
+        const val meowDesc = "喵"
     }
 }

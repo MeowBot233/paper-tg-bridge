@@ -13,6 +13,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.Duration
+import java.util.*
 import nya.yukisawa.paper_tg_bridge.Constants as C
 
 typealias CmdHandler = suspend (HandlerContext) -> Unit
@@ -38,32 +39,33 @@ class TgBot(
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(TgApiService::class.java)
+    private val uuidHelper = Retrofit.Builder()
+        .baseUrl("https://playerdb.co/api/player/minecraft/")
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(UuidHelper::class.java)
     private val updateChan = Channel<Update>()
     private var pollJob: Job? = null
     private var handlerJob: Job? = null
     private var currentOffset: Long = -1
     private var me: User? = null
-    private var commandRegex: Regex? = null
     private val commandMap: Map<String?, CmdHandler> = config.commands.run {
         mapOf(
             online to ::onlineHandler,
             time to ::timeHandler,
             chatID to ::chatIdHandler,
-            // TODO:
-            // linkIgn to ::linkIgnHandler,
-            // getAllLinked to ::getLinkedUsersHandler,
+            whitelist to ::whitelistHandler,
+            meow to ::meowHandler
         )
     }
 
     private suspend fun initialize() {
         me = api.getMe().result!!
-        // I intentionally don't put optional @username in regex
-        // since bot is only used in group chats
-        commandRegex = """^/(\w+)@${me!!.username}(?:\s+(.+))?$""".toRegex()
-        val commands = config.commands.run { listOf(time, online, chatID) }
+        val commands = config.commands.run { listOf(time, online, chatID, whitelist, meow) }
             .zip(
                 C.COMMAND_DESC.run {
-                    listOf(timeDesc, onlineDesc, chatIDDesc)
+                    listOf(timeDesc, onlineDesc, chatIDDesc, whitelistDesc, meowDesc)
                 }
             )
             .map { BotCommand(it.first!!, it.second) }
@@ -129,16 +131,19 @@ class TgBot(
             update.message.chat,
         )
         update.message.let {
-            it.text?.let { it1 ->
-                commandRegex?.matchEntire(it1)?.groupValues?.let { matchList ->
-                    commandMap[matchList[1]]?.run {
-                        val args = matchList[2].split("\\s+".toRegex())
-                        this(ctx.copy(commandArgs = args))
-                    }
+            if (it.text?.startsWith("/") == true) {
+                val args = it.text.split(" ")
+                val cmd = if (args[0].contains("@")) {
+                    val cmds = args[0].split("@")
+                    if (cmds[1] != me!!.username) return
+                    cmds[0].substring(1)
+                } else args[0].substring(1)
+                commandMap[cmd]?.run {
+                    this(ctx.copy(commandArgs = args))
+                    return
                 }
-            } ?: run {
-                onMessageHandler(ctx)
             }
+            onMessageHandler(ctx)
         }
     }
 
@@ -166,7 +171,7 @@ class TgBot(
                 else -> ""
             }
         } + " ($time)"
-        api.sendMessage(msg.chat.id, text, replyToMessageId = msg.messageId)
+        api.sendMessage(msg.chat.id, text, msg.messageId)
     }
 
     private suspend fun onlineHandler(ctx: HandlerContext) {
@@ -182,7 +187,7 @@ class TgBot(
         val text =
             if (playerList.isNotEmpty()) "${config.onlineString}:\n$playerStr"
             else config.nobodyOnlineString
-        api.sendMessage(msg.chat.id, text, replyToMessageId = msg.messageId)
+        api.sendMessage(msg.chat.id, text, msg.messageId)
     }
 
     private suspend fun chatIdHandler(ctx: HandlerContext) {
@@ -196,7 +201,83 @@ class TgBot(
         |  # other ids...
         |  - $chatId</pre>
         """.trimMargin()
-        api.sendMessage(chatId, text, replyToMessageId = msg.messageId)
+        api.sendMessage(chatId, text, msg.messageId)
+    }
+
+    private suspend fun whitelistHandler(ctx: HandlerContext) {
+        val msg = ctx.message!!
+        val chatId = msg.chat.id
+        if (!config.admins.contains(msg.from!!.username)) {
+            api.sendMessage(chatId, config.whitelistNoPermission)
+            return
+        }
+        if (ctx.commandArgs.count() != 2 && ctx.commandArgs.count() != 3) {
+            api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
+            return
+        }
+        when (ctx.commandArgs[1]) {
+            "add" -> {
+                if (ctx.commandArgs.count() != 3) {
+                    api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
+                    return
+                }
+                val name = ctx.commandArgs[2]
+                val result = uuidHelper.getUUID(name)
+                if (result.code != "player.found") {
+                    api.sendMessage(chatId, config.whitelistFailedString.replace("%username%", name), msg.messageId)
+                    return
+                }
+                val uuid = result.data!!.player.id
+                plugin.server.getOfflinePlayer(UUID.fromString(uuid)).isWhitelisted = true
+                api.sendMessage(chatId, config.whitelistAddSucceedString.replace("%username%", name), msg.messageId)
+            }
+            "remove" -> {
+                if (ctx.commandArgs.count() != 3) {
+                    api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
+                    return
+                }
+                val name = ctx.commandArgs[2]
+                val player = plugin.server.getOfflinePlayerIfCached(name)
+                player?.let {
+                    it.isWhitelisted = false
+                    api.sendMessage(
+                        chatId,
+                        config.whitelistRemoveSucceedString.replace("%username%", name),
+                        msg.messageId
+                    )
+                } ?: api.sendMessage(chatId, config.whitelistFailedString.replace("%username%", name), msg.messageId)
+            }
+            "list" -> {
+                if (ctx.commandArgs.count() != 2) {
+                    api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
+                    return
+                }
+                val players = plugin.server.whitelistedPlayers
+                var text = ""
+                for (player in players) {
+                    text += player.name + "\n"
+                }
+                text += players.count()
+                api.sendMessage(chatId, text, msg.messageId)
+            }
+            "on" -> {
+                plugin.server.setWhitelist(true)
+                api.sendMessage(chatId, "✔️", msg.messageId)
+            }
+            "off" -> {
+                plugin.server.setWhitelist(false)
+                api.sendMessage(chatId, "❌", msg.messageId)
+            }
+        }
+
+    }
+
+    private suspend fun meowHandler(
+        @Suppress("unused_parameter") ctx: HandlerContext
+    ) {
+        val msg = ctx.message!!
+        val chatId = msg.chat.id
+        api.sendMessage(chatId, "喵喵喵~", msg.messageId)
     }
 
     private fun onMessageHandler(

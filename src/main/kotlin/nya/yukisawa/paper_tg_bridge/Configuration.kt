@@ -21,12 +21,18 @@ class Configuration(plugin: Plugin) {
     val onlineString: String
     val nobodyOnlineString: String
     val asleepString: String
+    val whitelistAddSucceedString: String
+    val whitelistRemoveSucceedString: String
+    val whitelistFailedString: String
+    val whitelistNoPermission: String
+    val whitelistUsage: String
 
     val lang: Map<String, String>
 
     // Telegram bot stuff
     val botToken: String
     val allowedChats: List<Long>
+    val admins: List<String>
     val logFromTGtoMC: Boolean
     val allowWebhook: Boolean
     val webhookConfig: Map<String, Any>?
@@ -60,6 +66,7 @@ class Configuration(plugin: Plugin) {
             telegramFormat = getString("telegramFormat")!!
             minecraftFormat = getString("minecraftFormat")!!
             allowedChats = getLongList("chats")
+            admins = getStringList("admins")
 
             botToken = getString("botToken") ?: throw Exception(C.WARN.noToken)
             allowWebhook = getBoolean("useWebhook", false)
@@ -73,6 +80,11 @@ class Configuration(plugin: Plugin) {
             asleepString = getString("strings.asleep")!!
             joinString = getString("strings.joined")!!
             leaveString = getString("strings.left")!!
+            whitelistAddSucceedString = getString("strings.whitelist.addSucceed")!!
+            whitelistRemoveSucceedString = getString("strings.whitelist.removeSucceed")!!
+            whitelistFailedString = getString("strings.whitelist.failed")!!
+            whitelistUsage = getString("strings.whitelist.usage")!!
+            whitelistNoPermission = getString("strings.whitelist.noPermission")!!
             logPlayerAdvancement = getBoolean("logPlayerAdvancement", false)
             advancementString = getString("strings.advancement")!!
             logDeath = getBoolean("logPlayerDeath", false)
