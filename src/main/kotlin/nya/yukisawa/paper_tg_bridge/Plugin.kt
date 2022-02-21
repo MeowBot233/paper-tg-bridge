@@ -20,7 +20,7 @@ class Plugin : AsyncJavaPlugin() {
                     initializeWithConfig(it)
                 }
             }
-            setupChat()
+            if (!setupChat()) logger.warning("Vault is not installed!")
         } catch (e: Exception) {
             // Configuration file is missing or incomplete
             logger.warning(e.message)
