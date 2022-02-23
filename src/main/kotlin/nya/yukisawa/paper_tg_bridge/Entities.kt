@@ -42,13 +42,14 @@ data class Message(
     val chat: Chat,
     @Name("reply_to_message") val replyToMessage: Message? = null,
     val text: String? = null,
-    val photo:Array<PhotoSize>? = emptyArray(),
+    val photo: List<PhotoSize>? = emptyList(),
     val sticker: Sticker? = null,
-    val video: Any? = null,
-    val voice: Any? = null,
-    val audio: Audio? = null,
+    val video: Media? = null,
+    val voice: Media? = null,
+    val audio: Media? = null,
     val document: Document? = null,
-    val poll: Poll? = null
+    val poll: Poll? = null,
+    val caption: String? = null
 )
 
 data class PhotoSize(
@@ -68,7 +69,7 @@ data class Document(
     @Name("file_name") val fileName: String
 )
 
-data class Audio(
+data class Media(
     val duration: Int
 )
 

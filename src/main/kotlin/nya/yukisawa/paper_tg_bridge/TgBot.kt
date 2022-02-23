@@ -362,24 +362,37 @@ class TgBot(
         }
         if(!msg.photo.isNullOrEmpty()){
             text.append(Component
-                .text("[图片]")
+                .text("[图片]".apply {
+                    msg.caption?.let {
+                        this.plus(it)
+                    }
+                })
                 .color(NamedTextColor.BLUE)
             )
         }
         msg.sticker?.let {
-            text.append(Component.text("[贴纸 ${it.emoji}]")
-                .color(NamedTextColor.BLUE)
-                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("来自贴纸包 ${it.setName}")))
+            text.append(
+                Component.text("[${it.emoji}贴纸]")
+                    .color(NamedTextColor.BLUE)
+                    .hoverEvent(
+                        HoverEvent.hoverEvent(
+                            HoverEvent.Action.SHOW_TEXT,
+                            Component.text("来自贴纸包 ${it.setName}")
+                        )
+                    )
             )
         }
         msg.document?.let {
-            text.append(Component.text("[文件] ${it.fileName}").color(NamedTextColor.BLUE))
+            text.append(Component.text("[文件 ${it.fileName}]").color(NamedTextColor.BLUE))
         }
         msg.voice?.let {
-            text.append(Component.text("[语音]").color(NamedTextColor.BLUE))
+            text.append(Component.text("[语音 ${it.duration}秒]").color(NamedTextColor.BLUE))
+        }
+        msg.audio?.let {
+            text.append(Component.text("[音频 ${it.duration}秒]").color(NamedTextColor.BLUE))
         }
         msg.video?.let {
-            text.append(Component.text("[视频]").color(NamedTextColor.BLUE))
+            text.append(Component.text("[视频 ${it.duration}秒]").color(NamedTextColor.BLUE))
         }
         msg.poll?.let {
             text.append(Component.text("[投票] ${it.question}").color(NamedTextColor.BLUE))
@@ -389,7 +402,10 @@ class TgBot(
             text.append(Component.text(it))
         }
 
-        if(text.children().isEmpty()) text.content("[消息]").color(NamedTextColor.DARK_GREEN)
+        if (text.children().isEmpty()) text.content("[消息]").color(NamedTextColor.DARK_GREEN)
+        msg.caption?.let {
+            text.append(Component.text(it))
+        }
         return text.build()
     }
 

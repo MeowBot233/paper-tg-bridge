@@ -23,7 +23,7 @@ class Plugin : AsyncJavaPlugin() {
             if (!setupChat()) logger.warning("Vault is not installed!")
         } catch (e: Exception) {
             // Configuration file is missing or incomplete
-            logger.warning(e.message)
+            logger.warning(e.localizedMessage)
         }
     }
 
@@ -97,8 +97,8 @@ class Plugin : AsyncJavaPlugin() {
     }
 
     private fun setupChat(): Boolean {
-        if (!server.pluginManager.isPluginEnabled("Vault")) return false
-        val rsp = server.servicesManager.getRegistration(ch::class.javaObjectType)
+        if (!config!!.useVault) return false
+        val rsp = server.servicesManager.getRegistration(ch::class.java)
         rsp?.let { chat = it.provider }
         return chat != null
     }
