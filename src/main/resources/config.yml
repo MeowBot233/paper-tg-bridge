@@ -15,6 +15,7 @@ logPlayerAdvancement: true
 minecraftFormat: "[%username%] §r%message%"
 telegramFormat: "<b>%username%</b>:\n%message%"
 useVault: false
+messageTrim: 30
 strings:
   online: "<b>在线</b>"
   nobodyOnline: "<b>没人在线</b>"

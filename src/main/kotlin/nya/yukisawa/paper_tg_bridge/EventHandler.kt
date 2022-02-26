@@ -68,7 +68,6 @@ class EventHandler(
             val comp = it as TranslatableComponent
             var text = processComponent(comp)
             sendMessage(text.replace("\$s", ""))
-
         }
     }
 

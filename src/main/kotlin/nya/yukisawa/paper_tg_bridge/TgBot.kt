@@ -343,7 +343,7 @@ class TgBot(
             it.username?.let { username -> info.append(Component.text("\n@$username")) }
             text.append(
                 Component
-                    .text("[转发消息]")
+                    .text("[转发]")
                     .color(NamedTextColor.GOLD)
                     .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, info))
             )
@@ -399,14 +399,32 @@ class TgBot(
         }
 
         msg.text?.let {
-            text.append(Component.text(it))
+            text.append(processMessageText(it, config.messageTrim))
         }
 
         if (text.children().isEmpty()) text.content("[消息]").color(NamedTextColor.DARK_GREEN)
         msg.caption?.let {
-            text.append(Component.text(it))
+            text.append(processMessageText(it, config.messageTrim))
         }
         return text.build()
+    }
+
+    private fun processMessageText(text: String, trim: Int = 0): Component {
+        val msg = text.replace("\n", " ")
+        val builder = Component.text()
+        if (trim != 0 && msg.length > trim) {
+            builder
+                .append(Component.text("${msg.substring(0, trim)}..."))
+                .append(
+                    Component.text("[全文]").hoverEvent(
+                        HoverEvent.hoverEvent(
+                            HoverEvent.Action.SHOW_TEXT,
+                            Component.text(text)
+                        )
+                    )
+                )
+        } else builder.append(Component.text(msg))
+        return builder.build()
     }
 
     suspend fun sendMessageToTelegram(text: String, username: String? = null) {
