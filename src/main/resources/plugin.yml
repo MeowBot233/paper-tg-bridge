@@ -2,8 +2,6 @@ name: PaperTGBridge
 version: "1.0"
 api-version: "1.18"
 main: nya.yukisawa.paper_tg_bridge.Plugin
-softdepend:
-  - Vault
 description: Telegram <-> Minecraft 消息互通的 Paper 插件。
 commands:
   tgbridge_reload:
