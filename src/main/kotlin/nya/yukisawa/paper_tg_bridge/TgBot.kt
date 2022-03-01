@@ -324,17 +324,19 @@ class TgBot(
             return
 
         plugin.sendMessageToMinecraft(
-            text = processMessage(msg),
+            text = processMessage(msg, config.messageTrim),
             username = msg.from.rawUserMention(),
             chatTitle = msg.chat.title,
         )
     }
 
-    private fun processMessage(msg: Message): Component {
+    private fun processMessage(msg: Message, trim: Int = 0): Component {
         val text = Component.text()
         msg.replyToMessage?.let {
             text.append(
-                Component.text("[回复给 ${it.from?.rawUserMention()}]").color(NamedTextColor.GOLD)
+                Component
+                    .text("[回复 ${it.from?.rawUserMention()}:${processMessage(it, 10)}]")
+                    .color(NamedTextColor.GOLD)
                     .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, processMessage(it)))
             )
         }
@@ -350,35 +352,31 @@ class TgBot(
         }
         msg.forwardFromChat?.let {
             val info = Component.text()
-            when(it.type) {
+            when (it.type) {
                 "channel" -> info.append(Component.text("转发自频道 ${it.title}"))
                 "group" -> info.append(Component.text("转发自群组 ${it.title} 的管理员"))
             }
-            text.append(Component
-                .text("[转发消息]")
-                .color(NamedTextColor.GOLD)
-                .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT,info.build()))
+            text.append(
+                Component
+                    .text("[转发]")
+                    .color(NamedTextColor.GOLD)
+                    .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, info.build()))
             )
         }
-        if(!msg.photo.isNullOrEmpty()){
-            text.append(Component
-                .text("[图片]".apply {
-                    msg.caption?.let {
-                        this.plus(it)
-                    }
-                })
-                .color(NamedTextColor.BLUE)
+        if (!msg.photo.isNullOrEmpty()) {
+            text.append(
+                Component
+                    .text("[图片]")
+                    .color(NamedTextColor.BLUE)
             )
         }
         msg.sticker?.let {
             text.append(
-                Component.text("[${it.emoji}贴纸]")
+                Component
+                    .text("[${it.emoji}贴纸]")
                     .color(NamedTextColor.BLUE)
                     .hoverEvent(
-                        HoverEvent.hoverEvent(
-                            HoverEvent.Action.SHOW_TEXT,
-                            Component.text("来自贴纸包 ${it.setName}")
-                        )
+                        HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("来自贴纸包 ${it.setName}"))
                     )
             )
         }
@@ -395,16 +393,16 @@ class TgBot(
             text.append(Component.text("[视频 ${it.duration}秒]").color(NamedTextColor.BLUE))
         }
         msg.poll?.let {
-            text.append(Component.text("[投票] ${it.question}").color(NamedTextColor.BLUE))
+            text.append(Component.text("[投票] ${processMessageText(it.question, trim)}").color(NamedTextColor.BLUE))
         }
 
         msg.text?.let {
-            text.append(processMessageText(it, config.messageTrim))
+            text.append(processMessageText(it, trim))
         }
 
         if (text.children().isEmpty()) text.content("[消息]").color(NamedTextColor.DARK_GREEN)
         msg.caption?.let {
-            text.append(processMessageText(it, config.messageTrim))
+            text.append(processMessageText(it, trim))
         }
         return text.build()
     }
@@ -416,12 +414,14 @@ class TgBot(
             builder
                 .append(Component.text("${msg.substring(0, trim)}..."))
                 .append(
-                    Component.text("[全文]").hoverEvent(
-                        HoverEvent.hoverEvent(
-                            HoverEvent.Action.SHOW_TEXT,
-                            Component.text(text)
+                    Component.text("[全文]")
+                        .color(NamedTextColor.GOLD)
+                        .hoverEvent(
+                            HoverEvent.hoverEvent(
+                                HoverEvent.Action.SHOW_TEXT,
+                                Component.text(text)
+                            )
                         )
-                    )
                 )
         } else builder.append(Component.text(msg))
         return builder.build()

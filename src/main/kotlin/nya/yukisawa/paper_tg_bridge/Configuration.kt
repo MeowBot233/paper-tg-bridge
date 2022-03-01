@@ -26,7 +26,6 @@ class Configuration(plugin: Plugin) {
     val whitelistFailedString: String
     val whitelistNoPermission: String
     val whitelistUsage: String
-    val useVault: Boolean
     val messageTrim: Int
 
     val lang: Map<String, String>
@@ -91,7 +90,6 @@ class Configuration(plugin: Plugin) {
             advancementString = getString("strings.advancement")!!
             logDeath = getBoolean("logPlayerDeath", false)
             logPlayerAsleep = getBoolean("logPlayerAsleep", false)
-            useVault = getBoolean("useVault", false)
             messageTrim = getInt("messageTrim")
             telegramAPI = getString(
                 "telegramAPI",

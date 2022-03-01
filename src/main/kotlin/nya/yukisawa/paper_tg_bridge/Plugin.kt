@@ -4,14 +4,12 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextReplacementConfig
 import org.bukkit.command.CommandSender
 import org.bukkit.event.HandlerList
-import net.milkbowl.vault.chat.Chat as ch
 import nya.yukisawa.paper_tg_bridge.Constants as C
 
 class Plugin : AsyncJavaPlugin() {
     private var tgBot: TgBot? = null
     private var eventHandler: EventHandler? = null
     private var config: Configuration? = null
-    var chat: ch? = null
 
     override suspend fun onEnableAsync() {
         try {
@@ -20,7 +18,6 @@ class Plugin : AsyncJavaPlugin() {
                     initializeWithConfig(it)
                 }
             }
-            if (!setupChat()) logger.warning("Vault is not installed!")
         } catch (e: Exception) {
             // Configuration file is missing or incomplete
             logger.warning(e.localizedMessage)
@@ -94,12 +91,5 @@ class Plugin : AsyncJavaPlugin() {
             }
             sender.sendMessage(C.INFO.reloadComplete)
         }
-    }
-
-    private fun setupChat(): Boolean {
-        if (!config!!.useVault) return false
-        val rsp = server.servicesManager.getRegistration(ch::class.java)
-        rsp?.let { chat = it.provider }
-        return chat != null
     }
 }
