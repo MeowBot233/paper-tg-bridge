@@ -330,12 +330,16 @@ class TgBot(
         )
     }
 
-    private fun processMessage(msg: Message, trim: Int = 0): Component {
+    private fun processMessage(msg: Message, trim: Int = 0, showMore: Boolean = true): Component {
         val text = Component.text()
         msg.replyToMessage?.let {
             text.append(
                 Component
-                    .text("[回复 ${it.from?.rawUserMention()}:${processMessage(it, 10)}]")
+                    .text(
+                        "[回复 ${it.from?.rawUserMention()}: \"${
+                            PlainTextComponentSerializer.plainText().serialize(processMessage(it, 10, false))
+                        }\"]"
+                    )
                     .color(NamedTextColor.GOLD)
                     .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, processMessage(it)))
             )
@@ -393,36 +397,37 @@ class TgBot(
             text.append(Component.text("[视频 ${it.duration}秒]").color(NamedTextColor.BLUE))
         }
         msg.poll?.let {
-            text.append(Component.text("[投票] ${processMessageText(it.question, trim)}").color(NamedTextColor.BLUE))
+            text.append(
+                Component.text("[投票] ${processMessageText(it.question, trim, showMore)}").color(NamedTextColor.BLUE)
+            )
         }
 
         msg.text?.let {
-            text.append(processMessageText(it, trim))
+            text.append(processMessageText(it, trim, showMore))
         }
 
         if (text.children().isEmpty()) text.content("[消息]").color(NamedTextColor.DARK_GREEN)
         msg.caption?.let {
-            text.append(processMessageText(it, trim))
+            text.append(processMessageText(it, trim, showMore))
         }
         return text.build()
     }
 
-    private fun processMessageText(text: String, trim: Int = 0): Component {
+    private fun processMessageText(text: String, trim: Int, showMore: Boolean): Component {
         val msg = text.replace("\n", " ")
         val builder = Component.text()
         if (trim != 0 && msg.length > trim) {
-            builder
-                .append(Component.text("${msg.substring(0, trim)}..."))
-                .append(
-                    Component.text("[全文]")
-                        .color(NamedTextColor.GOLD)
-                        .hoverEvent(
-                            HoverEvent.hoverEvent(
-                                HoverEvent.Action.SHOW_TEXT,
-                                Component.text(text)
-                            )
+            builder.append(Component.text("${msg.substring(0, trim)}..."))
+            if (showMore) builder.append(
+                Component.text("[查看全文]")
+                    .color(NamedTextColor.GOLD)
+                    .hoverEvent(
+                        HoverEvent.hoverEvent(
+                            HoverEvent.Action.SHOW_TEXT,
+                            Component.text(text)
                         )
-                )
+                    )
+            )
         } else builder.append(Component.text(msg))
         return builder.build()
     }
