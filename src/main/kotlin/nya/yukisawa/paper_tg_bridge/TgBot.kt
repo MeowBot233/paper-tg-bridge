@@ -1,8 +1,6 @@
 package nya.yukisawa.paper_tg_bridge
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import net.kyori.adventure.text.Component
@@ -10,8 +8,10 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import okhttp3.OkHttpClient
+import org.bukkit.Bukkit
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.lang.Runnable
 import java.time.Duration
 import java.util.*
 import nya.yukisawa.paper_tg_bridge.Constants as C
@@ -29,6 +29,24 @@ class TgBot(
     private val plugin: Plugin,
     private val config: Configuration,
 ) {
+    private var commandResult = ""
+    private var commandTimer: Timer? = null
+    private val commandSender = plugin.server.createCommandSender {
+        commandResult += it.processComponent(config.lang) + "\n"
+        //plugin.server.logger.info(result)
+        commandTimer?.cancel()
+        commandTimer = Timer()
+        commandTimer!!.schedule(object : TimerTask() {
+            override fun run() {
+                runBlocking {
+                    plugin.server.logger.info(commandResult)
+                    if (commandResult.isBlank()) return@runBlocking
+                    sendMessageWithoutParse(commandResult)
+                    commandResult = ""
+                }
+            }
+        }, 100)
+    }
     private val client: OkHttpClient = OkHttpClient
         .Builder()
         .readTimeout(Duration.ZERO)
@@ -39,12 +57,7 @@ class TgBot(
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(TgApiService::class.java)
-    private val uuidHelper = Retrofit.Builder()
-        .baseUrl("https://playerdb.co/api/player/minecraft/")
-        .client(client)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(UuidHelper::class.java)
+
     private val updateChan = Channel<Update>()
     private var pollJob: Job? = null
     private var handlerJob: Job? = null
@@ -55,8 +68,8 @@ class TgBot(
             online to ::onlineHandler,
             time to ::timeHandler,
             chatID to ::chatIdHandler,
-            whitelist to ::whitelistHandler,
-            meow to ::meowHandler
+            meow to ::meowHandler,
+            command to ::commandHandler
         )
     }
 
@@ -64,10 +77,10 @@ class TgBot(
 
     private suspend fun initialize() {
         me = api.getMe().result!!
-        val commands = config.commands.run { listOf(time, online, chatID, whitelist, meow) }
+        val commands = config.commands.run { listOf(time, online, meow, command) }
             .zip(
                 C.COMMAND_DESC.run {
-                    listOf(timeDesc, onlineDesc, chatIDDesc, whitelistDesc, meowDesc)
+                    listOf(timeDesc, onlineDesc, meowDesc, commandDesc)
                 }
             )
             .map { BotCommand(it.first!!, it.second) }
@@ -207,102 +220,21 @@ class TgBot(
         api.sendMessage(chatId, text, msg.messageId)
     }
 
-    private suspend fun whitelistHandler(ctx: HandlerContext) {
-        val msg = ctx.message!!
-        val chatId = msg.chat.id
-        if (!config.admins.contains(msg.from!!.username)) {
-            api.sendMessage(chatId, config.whitelistNoPermission)
+    private suspend fun commandHandler(ctx: HandlerContext) {
+        if (!config.admins.contains(ctx.message?.from?.username)) {
+            sendMessageToTelegram(config.noPermission)
             return
         }
-        if (ctx.commandArgs.count() != 2 && ctx.commandArgs.count() != 3) {
-            if (config.debug) plugin.server.logger.info("Wrong usage of /whitelist!")
-            api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
+        if (ctx.commandArgs.size == 1) {
+            sendMessageWithoutParse("${ctx.commandArgs[0]} <command>")
             return
         }
-        when (ctx.commandArgs[1]) {
-            "add" -> {
-                if (ctx.commandArgs.count() != 3) {
-                    if (config.debug) plugin.server.logger.info("Wrong usage of /whitelist!")
-                    api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
-                    return
-                }
-                val name = ctx.commandArgs[2]
-                val result = uuidHelper.getUUID(name)
-                if (result.code != "player.found") {
-                    if (config.debug) plugin.server.logger.info("Player <b>$name</b> is not found!")
-                    api.sendMessage(
-                        chatId,
-                        config.whitelistFailedString.replace("%username%", "<b>$name</b>"),
-                        msg.messageId
-                    )
-                    return
-                }
-                val uuid = UUID.fromString(result.data!!.player.id)
-                val player = plugin.server.getOfflinePlayer(uuid)
-                player.isWhitelisted = true
-                plugin.server.whitelistedPlayers.add(player)
-                plugin.server.reloadWhitelist()
-                api.sendMessage(
-                    chatId,
-                    config.whitelistAddSucceedString.replace("%username%", "<b>${player.name}</b>"),
-                    msg.messageId
-                )
-            }
-            "remove" -> {
-                if (ctx.commandArgs.count() != 3) {
-                    api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
-                    return
-                }
-                val name = ctx.commandArgs[2]
-                val player = plugin.server.getOfflinePlayerIfCached(name)
-                player?.let {
-                    it.isWhitelisted = false
-                    api.sendMessage(
-                        chatId,
-                        config.whitelistRemoveSucceedString.replace("%username%", "<b>$name</b>"),
-                        msg.messageId
-                    )
-                } ?: api.sendMessage(
-                    chatId,
-                    config.whitelistFailedString.replace("%username%", "<b>$name</b>"),
-                    msg.messageId
-                )
-            }
-            "list" -> {
-                if (ctx.commandArgs.count() != 2) {
-                    api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
-                    return
-                }
-                val players = plugin.server.whitelistedPlayers
-                var text = ""
-                for (player in players) {
-                    text += player.name + "\n"
-                }
-                text += players.count()
-                api.sendMessage(chatId, text, msg.messageId)
-            }
-            "reload" -> {
-                plugin.server.reloadWhitelist()
-                api.sendMessage(chatId, "✔️", msg.messageId)
-            }
-            "on" -> {
-                plugin.server.scheduler.runTask(plugin, Runnable {
-                    plugin.server.setWhitelist(true)
-                })
-                api.sendMessage(chatId, "✔️", msg.messageId)
-            }
-            "off" -> {
-                plugin.server.scheduler.runTask(plugin, Runnable {
-                    plugin.server.setWhitelist(false)
-                })
-                api.sendMessage(chatId, "✖️", msg.messageId)
-            }
-            else -> {
-                if (config.debug) plugin.server.logger.info("Wrong usage of /whitelist!")
-                api.sendMessage(chatId, config.whitelistUsage, msg.messageId)
-            }
-        }
-
+        val args = ctx.commandArgs.subList(1, ctx.commandArgs.size)
+        Bukkit.getScheduler().runTask(plugin, Runnable {
+            val cmd = args.joinToString(" ")
+            plugin.server.logger.info(cmd)
+            plugin.server.dispatchCommand(commandSender, cmd)
+        })
     }
 
     private suspend fun meowHandler(
@@ -419,7 +351,7 @@ class TgBot(
         if (trim != 0 && msg.length > trim) {
             builder.append(Component.text("${msg.substring(0, trim)}..."))
             if (showMore) builder.append(
-                Component.text("[查看全文]")
+                Component.text("[全文]")
                     .color(NamedTextColor.GOLD)
                     .hoverEvent(
                         HoverEvent.hoverEvent(
@@ -436,10 +368,22 @@ class TgBot(
         val formatted = username?.let {
             config.telegramFormat
                 .replace(C.USERNAME_PLACEHOLDER, username.fullEscape())
-                .replace(C.MESSAGE_TEXT_PLACEHOLDER, text.escapeHtml())
+                .replace(C.MESSAGE_TEXT_PLACEHOLDER, text.escapeHTML())
         } ?: text
         config.allowedChats.forEach { chatId ->
             api.sendMessage(chatId, formatted)
+        }
+    }
+
+    suspend fun sendMessageWithoutParse(text: String, username: String? = null) {
+        val formatted = username?.let {
+            config.telegramFormat
+                .replace(C.USERNAME_PLACEHOLDER, username.fullEscape())
+                .replace(C.MESSAGE_TEXT_PLACEHOLDER, text.escapeHTML())
+        } ?: text
+        plugin.server.logger.info("sending $formatted")
+        config.allowedChats.forEach { chatId ->
+            api.sendMessageWithoutParse(chatId, formatted)
         }
     }
 }

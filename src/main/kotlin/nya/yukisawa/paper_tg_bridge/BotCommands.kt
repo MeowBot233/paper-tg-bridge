@@ -8,6 +8,7 @@ class BotCommands(cfg: FileConfiguration) {
     val chatID: String?
     val whitelist: String?
     val meow: String?
+    val command: String?
 
     init {
         cfg.run {
@@ -16,6 +17,7 @@ class BotCommands(cfg: FileConfiguration) {
             chatID = getString("commands.chat_id")
             whitelist = getString("commands.whitelist")
             meow = getString("commands.meow")
+            command = getString("commands.command")
         }
     }
 }

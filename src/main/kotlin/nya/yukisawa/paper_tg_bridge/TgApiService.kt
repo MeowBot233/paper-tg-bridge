@@ -18,6 +18,13 @@ interface TgApiService {
         @Query("reply_to_message_id") replyToMessageId: Long? = null,
     ): TgResponse<Message>
 
+    @GET("sendMessage")
+    suspend fun sendMessageWithoutParse(
+        @Query("chat_id") chatId: Long,
+        @Query("text") text: String,
+        @Query("reply_to_message_id") replyToMessageId: Long? = null,
+    ): TgResponse<Message>
+
     @GET("getUpdates")
     suspend fun getUpdates(
         @Query("offset") offset: Long,

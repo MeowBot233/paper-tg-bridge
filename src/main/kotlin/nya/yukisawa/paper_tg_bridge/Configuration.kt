@@ -21,11 +21,7 @@ class Configuration(plugin: Plugin) {
     val onlineString: String
     val nobodyOnlineString: String
     val asleepString: String
-    val whitelistAddSucceedString: String
-    val whitelistRemoveSucceedString: String
-    val whitelistFailedString: String
-    val whitelistNoPermission: String
-    val whitelistUsage: String
+    val noPermission: String
     val messageTrim: Int
 
     val lang: Map<String, String>
@@ -81,11 +77,7 @@ class Configuration(plugin: Plugin) {
             asleepString = getString("strings.asleep")!!
             joinString = getString("strings.joined")!!
             leaveString = getString("strings.left")!!
-            whitelistAddSucceedString = getString("strings.whitelist.addSucceed")!!
-            whitelistRemoveSucceedString = getString("strings.whitelist.removeSucceed")!!
-            whitelistFailedString = getString("strings.whitelist.failed")!!
-            whitelistUsage = getString("strings.whitelist.usage")!!
-            whitelistNoPermission = getString("strings.whitelist.noPermission")!!
+            noPermission = getString("strings.noPermission")!!
             logPlayerAdvancement = getBoolean("logPlayerAdvancement", false)
             advancementString = getString("strings.advancement")!!
             logDeath = getBoolean("logPlayerDeath", false)

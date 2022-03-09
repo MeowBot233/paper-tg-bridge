@@ -22,17 +22,12 @@ strings:
   left: "<b>%username%</b> 退出服务器"
   asleep: "<b>%username%</b> 睡觉了"
   advancement: "<b>%username%</b> %type% <b>[%advancement%]</b>\n%description%"
-  whitelist:
-    addSucceed: "成功将%username%添加到白名单！"
-    removeSucceed: "成功将%username%从白名单移除！"
-    failed: "未能找到玩家%username%。"
-    usage: "用法\n/whitelist <add/remove> <name> 将玩家加入或移除白名单（仅限管理员）\n/whitelist list 显示白名单玩家\n/whitelist <on/off> 开启/关闭白名单"
-    noPermission: "没有权限！"
+  noPermission: "你没有权限这样做！"
 commands:
   time: "time"
   online: "online"
   chat_id: "chat_id"
-  whitelist: "whitelist"
   meow: "meow"
+  command: "command"
 telegramAPI: "api.telegram.org"
 debug: true

@@ -1,7 +1,6 @@
 package nya.yukisawa.paper_tg_bridge
 
 import io.papermc.paper.event.player.AsyncChatEvent
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
@@ -51,25 +50,11 @@ class EventHandler(
 
         event.deathMessage()?.let { it ->
             val comp = it as TranslatableComponent
-            val text = processComponent(comp)
+            val text = comp.processComponent(config.lang)
             sendMessage(text.replace("\$s", ""))
         }
     }
 
-    private fun processComponent(comp: Component): String {
-        return if (comp is TextComponent) comp.content()
-        else {
-            val tc = comp as TranslatableComponent
-            var str = config.lang[tc.key()]!!
-            for (child in tc.children())
-                str = str.replaceFirst("%s", processComponent(child))
-            for (i in 1..tc.args().size)
-                str = str.replace("%$i", processComponent(tc.args()[i - 1]))
-            if (tc.key() == "chat.square_brackets")
-                str = str.replace("%s", (tc.args()[0].children()[0] as TextComponent).content())
-            str
-        }
-    }
 
     @EventHandler
     fun onPlayerAsleep(event: PlayerBedEnterEvent) {
