@@ -31,12 +31,12 @@ jobs:
           distribution: 'adopt'
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
 
-      - run: ./gradlew && cp ./build/libs/*.jar  spigot-tg-bridge.jar
+      - run: ./gradlew && cp ./build/libs/*.jar  paper-tg-bridge.jar
 
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: spigot-tg-bridge.jar
-          path: spigot-tg-bridge.jar
+          name: paper-tg-bridge.jar
+          path: paper-tg-bridge.jar
           retention-days: 1
