@@ -58,21 +58,8 @@ java {
 tasks {
     named<ShadowJar>("shadowJar") {
         archiveFileName.set(
-            "spigot-tg-bridge-$paperApiVersion-v$pluginVersion.jar"
+            "paper-tg-bridge-$paperApiVersion-v$pluginVersion.jar"
         )
-    }
-    register<Copy>("copyArtifacts") {
-        val dest = File(
-            System.getProperty("user.home"),
-            "MinecraftServers/spigot_1.18/plugins/",
-        )
-        from(shadowJar)
-        into(dest)
-    }
-    register("pack") {
-        description = "[For development only!] Build project and copy .jar into servers directory"
-        dependsOn("shadowJar")
-        finalizedBy("copyArtifacts")
     }
 //    withType<KotlinCompile> {
 //        kotlinOptions {
