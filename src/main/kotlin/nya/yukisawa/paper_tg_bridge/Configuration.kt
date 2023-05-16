@@ -41,6 +41,10 @@ class Configuration(plugin: Plugin) {
 
     val debug: Boolean
 
+    val proxyEnabled: Boolean
+    val proxyHost: String
+    val proxyPort: Int
+
     init {
         val cfgFile = File(plugin.dataFolder, C.configFilename)
         if (!cfgFile.exists()) {
@@ -91,6 +95,10 @@ class Configuration(plugin: Plugin) {
             commands = BotCommands(this)
 
             debug = getBoolean("debug", false)
+
+            proxyEnabled = getBoolean("proxy.enabled", false)
+            proxyHost = getString("proxy.host", "")!!
+            proxyPort = getInt("proxy.port", 10809)
         }
     }
 

@@ -12,6 +12,9 @@ import org.bukkit.Bukkit
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.lang.Runnable
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.SocketAddress
 import java.time.Duration
 import java.util.*
 import nya.yukisawa.paper_tg_bridge.Constants as C
@@ -47,8 +50,11 @@ class TgBot(
             }
         }, 100)
     }
+
+    private val proxy: Proxy = if (!config.proxyEnabled) Proxy.NO_PROXY else Proxy(Proxy.Type.HTTP, InetSocketAddress(config.proxyHost, config.proxyPort))
     private val client: OkHttpClient = OkHttpClient
         .Builder()
+        .proxy(proxy)
         .readTimeout(Duration.ZERO)
         .build()
     private val api = Retrofit.Builder()
