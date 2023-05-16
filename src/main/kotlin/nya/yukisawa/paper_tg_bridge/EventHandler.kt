@@ -55,7 +55,6 @@ class EventHandler(
         }
     }
 
-
     @EventHandler
     fun onPlayerAsleep(event: PlayerBedEnterEvent) {
         if (!config.logPlayerAsleep) return
@@ -87,7 +86,6 @@ class EventHandler(
                 sendMessage(text)
             } else sendMessage(titleKey)
         }
-
     }
 
     private fun sendMessage(text: String, username: String? = null) {

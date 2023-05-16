@@ -34,7 +34,6 @@ repositories {
     maven(url = "https://papermc.io/repo/repository/maven-public/")
     maven(url = "https://oss.sonatype.org/content/groups/public/")
     maven(url = "https://jitpack.io")
-
 }
 
 dependencies {
