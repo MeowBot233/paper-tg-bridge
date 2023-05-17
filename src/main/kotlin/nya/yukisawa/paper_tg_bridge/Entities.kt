@@ -8,7 +8,6 @@ data class TgResponse<T>(
     val description: String?,
 )
 
-
 data class Update(
     @Name("update_id") val updateId: Long,
     val message: Message? = null,
@@ -73,8 +72,6 @@ data class Media(
     val duration: Int
 )
 
-
 data class BotCommand(val command: String, val description: String)
 
 data class SetMyCommands(val commands: List<BotCommand>)
-

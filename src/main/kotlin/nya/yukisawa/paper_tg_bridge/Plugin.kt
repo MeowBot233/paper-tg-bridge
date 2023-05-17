@@ -26,8 +26,6 @@ class Plugin : AsyncJavaPlugin() {
 
     private suspend fun initializeWithConfig(config: Configuration) {
         if (!config.isEnabled) return
-
-
         tgBot?.run { stop() }
         tgBot = TgBot(this, config).also { bot ->
             bot.startPolling()
@@ -64,15 +62,15 @@ class Plugin : AsyncJavaPlugin() {
     ) = config?.run {
         val format = Component.text(
             minecraftFormat
-            .replace(C.USERNAME_PLACEHOLDER,username)
-            .replace(C.CHAT_TITLE_PLACEHOLDER, chatTitle)
+                .replace(C.USERNAME_PLACEHOLDER, username)
+                .replace(C.CHAT_TITLE_PLACEHOLDER, chatTitle)
         ).replaceText(
             TextReplacementConfig.builder()
                 .match(C.MESSAGE_TEXT_PLACEHOLDER)
                 .replacement(text)
                 .once()
                 .build()
-            )
+        )
         server.broadcast(format)
 
     }
