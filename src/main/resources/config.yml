@@ -32,6 +32,6 @@ commands:
 telegramAPI: "api.telegram.org"
 debug: true
 proxy:
-  enable: false
+  enabled: false
   host: "localhost"
   port: 10809
